@@ -6,6 +6,8 @@ import './assets/styles/index.scss'
 import './assets/styles/element-plus.scss'
 import './assets/styles/element-theme.scss'
 import dragDialog from './directives/dragDialog'
+import ElementPlus from 'element-plus'
+import 'element-plus/dist/index.css'
 
 const app = createApp(App)
 
@@ -40,4 +42,4 @@ for (const iconName in ElIconModules) {
 // const $imgcdn = 'https://'
 // app.provide('imgcdn', $imgcdn)
 
-app.use(dragDialog).use(router).use(store).mount('#app')
+app.use(ElementPlus).use(dragDialog).use(router).use(store).mount('#app')

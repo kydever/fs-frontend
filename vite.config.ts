@@ -14,11 +14,15 @@ export default ({ command }: ConfigEnv): UserConfigExport => {
       })
     ],
     server: {
-      port: 4000,
+      port: 9501,
+      host: '127.0.0.1',
+      open: true,
       proxy: {
-        '/mock': {
-          target: 'http://yapi.smart-xwork.cn',
-          changeOrigin: true //是否跨域
+        '/api': {
+          target: 'http://192.168.2.166:9501/',
+          changeOrigin: true, //是否跨域
+          ws: true,
+          rewrite: (path: string) => path.replace(/api/, '/')
         }
       }
     },

@@ -3,7 +3,7 @@ import axios from 'axios'
 import { AxiosRequestConfig, AxiosResponse } from 'axios'
 import { ElMessage } from 'element-plus'
 import { getToken } from '@/utils/auth'
-import router from '@/router'
+import { toWarrant } from '@/utils/utils'
 
 // 创建axios实例
 const service = axios.create({
@@ -15,14 +15,13 @@ const service = axios.create({
 service.interceptors.request.use(
   (config: AxiosRequestConfig) => {
     const token: string = getToken()
-    if (token) {
-      config.headers['token'] = token
-    }
-    const route = router.currentRoute.value
-    // 测试mock数据，可删除
-    if (route.path === '/base/mock' && config.url == '/api/getTableList') {
-      config.baseURL = ''
-    }
+    // config.headers['token'] = token
+    config.headers['work-wx-token'] = token || ''
+    // const route = router.currentRoute.value
+    // // 测试mock数据，可删除
+    // if (route.path === '/base/mock' && config.url == '/api/getTableList') {
+    //   config.baseURL = ''
+    // }
     return config
   },
   (error) => {
@@ -34,9 +33,9 @@ service.interceptors.request.use(
 // 添加响应拦截器
 service.interceptors.response.use(
   (res: AxiosResponse) => {
-    const { data } = res
-    const code = data.status.code
-    if (code !== 0) {
+    const { data, status } = res
+    const code = data.code
+    if (status !== 200) {
       ElMessage.closeAll()
       ElMessage({
         message: data.status.msg || data.status.message || 'error',
@@ -46,64 +45,84 @@ service.interceptors.response.use(
       })
       return Promise.reject(data.status)
     }
-    if (code === 0) {
-      return data.data
+    switch (code) {
+      case 700:
+        toWarrant()
+        break
+      case 0:
+        return data.data
+      default:
+        ElMessageFun(data.message)
+        break
     }
   },
   (err) => {
     // 对响应错误做点什么
     if (err && err.response) {
       switch (err.response.status) {
-        case 400:
-          err.message = '请求错误'
-          break
-        case 401:
-          err.message = '未授权，请登录'
-          break
-        case 403:
-          err.message = '拒绝访问'
-          break
         case 404:
-          err.message = `请求地址出错: ${err.response.config.url}`
-          break
-        case 408:
-          err.message = '请求超时'
-          break
-        case 500:
-          err.message = '服务器内部错误'
-          break
-        case 501:
-          err.message = '服务未实现'
-          break
-        case 502:
-          err.message = '网关错误'
-          break
-        case 503:
-          err.message = '服务不可用'
-          break
-        case 504:
-          err.message = '网关超时'
-          break
-        case 505:
-          err.message = 'HTTP版本不受支持'
+          ElMessageFun(`请求地址出错: ${err.response.config.url}`)
           break
         default:
-          err.message = '系统错误'
+          errorMessage(err.response.status)
           break
       }
     } else {
-      err.message = '请求失败！'
+      ElMessageFun('请求失败！')
     }
-    ElMessage.closeAll()
-    ElMessage({
-      message: err.message,
-      showClose: true,
-      type: 'error',
-      duration: 4000
-    })
     // 对响应错误做点什么
     return Promise.reject(err)
   }
 )
+
+function errorMessage(status) {
+  let message = ''
+  switch (status) {
+    case 400:
+      message = '请求错误'
+      break
+    case 401:
+      message = '未授权，请登录'
+      break
+    case 403:
+      message = '拒绝访问'
+      break
+    case 408:
+      message = '请求超时'
+      break
+    case 500:
+      message = '服务器内部错误'
+      break
+    case 501:
+      message = '服务未实现'
+      break
+    case 502:
+      message = '网关错误'
+      break
+    case 503:
+      message = '服务不可用'
+      break
+    case 504:
+      message = '网关超时'
+      break
+    case 505:
+      message = 'HTTP版本不受支持'
+      break
+    default:
+      message = '系统错误'
+      break
+  }
+  ElMessageFun(message)
+}
+
+function ElMessageFun(parems) {
+  ElMessage.closeAll()
+  ElMessage({
+    message: parems,
+    showClose: true,
+    type: 'error',
+    duration: 4000
+  })
+}
 
 export default service

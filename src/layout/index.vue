@@ -2,16 +2,16 @@
   <el-container>
     <!-- 头部 -->
     <el-header style="height: 50px">
-      <Header :is-collapse="isCollapse" />
+      <Header :is-collapse="true" />
     </el-header>
 
     <!-- 侧边菜单栏 -->
-    <div class="aside">
+    <!-- <div class="aside">
       <Menu />
-    </div>
+    </div> -->
 
     <!-- 主体内容 -->
-    <el-main id="nucarf-main" :class="[isCollapse ? 'isCollapse' : '']">
+    <el-main id="nucarf-main" class="isCollapse">
       <el-scrollbar>
         <!-- 主体部分 -->
         <router-view />
@@ -25,15 +25,15 @@ import { defineComponent, computed } from 'vue'
 import { useStore } from 'vuex'
 import { ElContainer, ElMain, ElScrollbar, ElHeader } from 'element-plus'
 import Header from './Header.vue'
-import Menu from './Menu/Menu.vue'
+// import Menu from './Menu/Menu.vue'
 export default defineComponent({
   components: {
     ElContainer,
     ElMain,
     ElScrollbar,
     ElHeader,
-    Header,
-    Menu
+    Header
+    // Menu
   },
   setup() {
     const store = useStore()
@@ -95,7 +95,7 @@ export default defineComponent({
   transition: 0.3s margin-left ease-in-out;
 
   &.isCollapse {
-    margin-left: 64px;
+    margin-left: 0px;
   }
 
   :deep(.el-scrollbar__view:not(.el-time-spinner__list)) {

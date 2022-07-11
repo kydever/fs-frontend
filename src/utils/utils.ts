@@ -1,7 +1,7 @@
 import { cloneDeep, assign } from 'lodash-es'
 import { LocationQueryRaw } from 'vue-router'
 import router from '@/router'
-
+import { ElMessageBox } from 'element-plus'
 /**
  * @Description: 根据地址下载文件
  * @param : href  下载链接
@@ -37,5 +37,14 @@ export function goPage(path = '/', query?: LocationQueryRaw) {
   router.push({
     path: path,
     query: query
+  })
+}
+
+export function toWarrant() {
+  ElMessageBox.alert('点击确定重新登录', '用户登录失效', {
+    confirmButtonText: '确定',
+    callback: () => {
+      router.push('/login')
+    }
   })
 }

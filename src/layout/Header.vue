@@ -1,9 +1,9 @@
 <template>
   <div class="header-left">
-    <el-icon :size="25" color="#fff" @click="handleCollapseClick">
+    <!-- <el-icon :size="25" color="#fff" @click="handleCollapseClick">
       <expand v-if="isCollapse" />
       <fold v-else />
-    </el-icon>
+    </el-icon> -->
     <span class="company-name">
       {{ userInfo.company }}
     </span>
@@ -12,7 +12,7 @@
     <el-dropdown>
       <div class="el-dropdown-link">
         <el-avatar :src="avatar" />
-        <span class="name">{{ userInfo.userName }}</span>
+        <span class="name">{{ userInfo.name }}</span>
       </div>
       <template #dropdown>
         <el-dropdown-menu>
@@ -29,8 +29,8 @@ import {
   ElDropdownMenu,
   ElDropdownItem,
   ElAvatar,
-  ElMessageBox,
-  ElIcon
+  ElMessageBox
+  // ElIcon
 } from 'element-plus'
 import { computed, defineComponent } from 'vue'
 import { useStore } from 'vuex'
@@ -43,8 +43,8 @@ export default defineComponent({
     ElDropdown,
     ElDropdownMenu,
     ElDropdownItem,
-    ElAvatar,
-    ElIcon
+    ElAvatar
+    // ElIcon
   },
   props: {
     isCollapse: {

@@ -44,21 +44,21 @@ const routes: any[] = [
   }
 ]
 
-interface Route {
-  path: string
-  name: string
-  component(): any
-  meta: Record<string, string | boolean>
-}
+// interface Route {
+//   path: string
+//   name: string
+//   component(): any
+//   meta: Record<string, string | boolean>
+// }
 
 /** 当路由很多时，可以拆分成小模块 **/
 // 自动导入Modules 模块
-const routeModuleFiles = import.meta.globEager('./modules/*.ts')
-Object.keys(routeModuleFiles).forEach((key: string) => {
-  const module = routeModuleFiles[key].default
-  module.forEach((route: Route) => {
-    routes[1].children.push(route)
-  })
-})
+// const routeModuleFiles = import.meta.globEager('./modules/*.ts')
+// Object.keys(routeModuleFiles).forEach((key: string) => {
+//   const module = routeModuleFiles[key].default
+//   module.forEach((route: Route) => {
+//     routes[1].children.push(route)
+//   })
+// })
 
 export default routes

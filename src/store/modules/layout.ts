@@ -1,6 +1,6 @@
 const state = {
   // 导航栏菜单是否隐藏
-  isCollapse: false
+  isCollapse: true
 }
 
 const mutations = {
