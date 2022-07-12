@@ -76,6 +76,9 @@ const props = defineProps({
   },
   isfile:{
     type: Boolean
+  },
+  data:{
+    type: Object
   }
 })
 
@@ -98,14 +101,17 @@ const headersData = {
   'work-wx-token': getToken()
 }
 
-const actionurl = `http://127.0.0.1:9501/api/file/${ruleForm.id}`
+const actionurl = ref(`http://127.0.0.1:9501/api/file/${ruleForm.id}`)
 
 watch(
-  ()=>[props.visible,props.path],
+  ()=>[props.visible,props.path,props.data],
   (val)=>{
-    console.log(val)
     dialogVisible.value = val[0]
     ruleForm.path = val[1]
+    // ruleForm.id = val[2]
+    if(val[2].id){
+      echoDataFun(val[2])
+    }
   },
   { immediate: true }
 )
@@ -114,7 +120,15 @@ watch(
 const uploadRef = ref<UploadInstance>()
 
 const handleChange = (uploadFile) => {
-  console.log(uploadFile)
+  if(!uploadFile.raw.type){
+    ElMessage({
+      message: '文件类型不支持',
+      type: 'warning'
+    })
+    uploadRef.value!.clearFiles()
+    return
+  }
+  ruleForm.path = `${ruleForm.path}/${uploadFile.name}`
 }
 
 const handleExceed = () => {
@@ -134,12 +148,21 @@ const submitUpload = () => {
 }
 
 const successFun = (response) => {
-  console.log(response)
-  ElMessage({
-    message: '上传成功！',
-    type: 'success'
-  })
-  uploadRef.value!.clearFiles()
+  if( !response.code ){
+    ElMessage({
+      message: '上传成功！',
+      type: 'success'
+    })
+    uploadRef.value!.clearFiles()
+    ruleForm.summary = ''
+    ruleForm.tags = []
+    tagtext.value = ''
+  } else {
+    ElMessage({
+      message: response.message,
+      type: 'error'
+    })
+  }
 }
 
 const errorFun = () => {
@@ -161,20 +184,29 @@ const submitFun = async()=>{
     const body = {
       id: 0,
       dirname: dirname.value,
-      path: `${ruleForm.path}${dirname.value}`
+      path: ruleForm.path === '/' ? `${ruleForm.path}${dirname.value}`:`${ruleForm.path}/${dirname.value}`
     }
     const { saved } = await postFileId(body.id,body)
-    console.log(saved)
     if( saved ){
       ElMessage({
         message: '文件新增成功！',
         type: 'success'
       })
+      dirname.value = ''
       emit('closeFun')
     }
   } catch (error) {
     console.log(error)
   }
+}
+
+const echoDataFun = (parems) => {
+  let i = parems.path.lastIndexOf('/')
+  ruleForm.summary = parems.summary
+  ruleForm.id = parems.id
+  ruleForm.tags = parems.tags
+  ruleForm.path = parems.path.substring(0, i)
+  actionurl.value = `http://127.0.0.1:9501/api/file/${ruleForm.id}`
 }
 
 </script>
