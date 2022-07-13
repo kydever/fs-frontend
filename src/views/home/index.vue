@@ -17,32 +17,15 @@
       </el-col>
     </el-row>
     <el-row>
-      <el-col class="treebg" :span="8">
-        <el-tree
-          :data="treeList"
-          :props="defaultProps"
-          accordion
-          @node-click="handleNodeClick"
-        >
-          <template #default="scope">
-            <div class="custom-node">
-              <el-icon v-if="scope.node.data.isDir">
-                <Folder />
-              </el-icon>
-              <span class="lable_sp">{{ scope.node.label }}</span>
-            </div>
-          </template>
-        </el-tree>
-      </el-col>
-      <el-col :span="16" class="table_div">
-        <el-button class="ma_bo" type="primary" @click="allDownloadFun">批量下载</el-button>
+      <el-col :span="24" class="table_div">
+        <el-button class="ma_bo butri" type="primary" @click="allDownloadFun">批量下载</el-button>
         <el-table :data="tableData" style="width: 100%" @selection-change="handleSelectionChange">
           <el-table-column type="selection" width="55" />
           <el-table-column prop="title" label="文件名" />
           <el-table-column label="操作">
             <template #default="scope">
-              <el-button type="primary" @click="reviseFun(scope.row)">修改</el-button>
-              <el-button type="primary" @click="downloadFun(scope.row)">下载</el-button>
+              <el-button v-if="!scope.row.is_dir" type="primary" @click="reviseFun(scope.row)">修改</el-button>
+              <el-button v-if="!scope.row.is_dir" type="primary" @click="downloadFun(scope.row)">下载</el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -70,12 +53,6 @@ import { download } from '@/utils/utils'
 
 const visible = ref(false)
 
-const defaultProps = {
-  children: 'children',
-  label: 'title',
-  isdir: 'is_dir'
-}
-
 const dialog = reactive({
   path: '/',
   isfile: true,
@@ -92,58 +69,18 @@ interface Tree {
   children?: Tree[]
 }
 
-const treeList = ref(<Tree[]>[])
-
-const nodeMap = ref({})
+const allId = ref([])
 
 const tableData = ref([])
-
-const allid = ref([])
 
 const path = ref('/')
 
 const butDisabled = ref(false)
 
-const formatToTree = (list): Tree[] => {
-  let result: Tree[] = []
-  for (let i = 0; i < list.length; i++) {
-    let item = list[i]
-    let tree = { ...item, isDir: item.is_dir }
-    result.push(tree)
-    nodeMap[tree.path] = tree
-  }
-  return result
-}
-
-const arrangementData = (parems, list) => {
-  if (parems.dirname === '/') {
-    treeList.value = formatToTree(list)
-  } else {
-    const ssss = (treeData, dirname) => {
-      for(let i=0; i< treeData.length;i++){
-        if(treeData[i].path == dirname){
-          treeData[i].children = formatToTree(list)
-          break
-        }
-        if(dirname.startsWith(treeData[i].path)){
-          ssss(treeData[i].children, dirname)
-        }
-      }
-    }
-    ssss(treeList.value, parems.dirname)
-    // nodeMap[parems.dirname].children = formatToTree(list)
-    if (list.length) {
-      tableData.value = list.filter((item) => !item.is_dir)
-    }
-  }
-  console.log(treeList)
-}
-
-
 const getfileList = async (parems) => {
   try {
     const { list } = await getFile(parems)
-    arrangementData(parems, list)
+    tableData.value = list
   } catch (error) {
     console.log(error)
   }
@@ -193,14 +130,14 @@ const downloadFun = (parems) => {
 }
 
 const handleSelectionChange = (val) => {
-  allid.value = []
-  allid.value = val.map((item) => {
+  allId.value = []
+  allId.value = val.map((item) => {
     return item.id
   })
 }
 
 const allDownloadFun = () => {
-  downloadfile(allid.value)
+  downloadfile(allId.value)
 }
 
 const reviseFun = (parems) => {
