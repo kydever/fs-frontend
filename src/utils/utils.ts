@@ -11,6 +11,7 @@ export function download(href: string, title: string) {
   const a = document.createElement('a')
   a.style.display = 'none'
   a.setAttribute('href', href)
+  a.setAttribute('target','blank')
   a.setAttribute('download', title ? title : '')
   // 随机字符串id
   const randomId: string = Math.random().toString(36).substring(2)
