@@ -101,7 +101,7 @@ const headersData = {
   'work-wx-token': getToken()
 }
 
-const actionurl = ref(`http://127.0.0.1:9501/api/file/${ruleForm.id}`)
+const actionurl = ref(`/api/file/${ruleForm.id}`)
 
 watch(
   ()=>[props.visible,props.path,props.data],
@@ -206,7 +206,7 @@ const echoDataFun = (parems) => {
   ruleForm.id = parems.id
   ruleForm.tags = parems.tags
   ruleForm.path = parems.path.substring(0, i)
-  actionurl.value = `http://127.0.0.1:9501/api/file/${ruleForm.id}`
+  actionurl.value = `/api/file/${ruleForm.id}`
 }
 
 </script>
