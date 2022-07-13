@@ -38,7 +38,7 @@ export default defineComponent({
 
     // 触发登录
     const loginFun = async() => {
-      window.location.href = `http://192.168.2.166:9501/oauth/authorize?redirect_uri=${window.location.href}`
+      window.location.href = `/api/oauth/authorize?redirect_uri=${window.location.href}`
       loginLoading.value = true
     }
     onBeforeUnmount(() => {
