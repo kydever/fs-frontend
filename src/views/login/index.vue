@@ -51,14 +51,11 @@ export default defineComponent({
         one.value = false
         try {
           const { token, user } = await postLoginCode({ code: code })
-          console.log(token)
-          console.log(user)
           setToken(token)
           store.commit('user/updateUserInfo', user)
           setCookies(KYUSERINFO, user)
           router.push('/home')
         } catch (error) {
-          console.log(error)
           router.push('/login')
           loginLoading.value = false
         }

@@ -119,11 +119,24 @@ const arrangementData = (parems, list) => {
   if (parems.dirname === '/') {
     treeList.value = formatToTree(list)
   } else {
-    nodeMap[parems.dirname].children = formatToTree(list)
+    const ssss = (treeData, dirname) => {
+      for(let i=0; i< treeData.length;i++){
+        if(treeData[i].path == dirname){
+          treeData[i].children = formatToTree(list)
+          break
+        }
+        if(dirname.startsWith(treeData[i].path)){
+          ssss(treeData[i].children, dirname)
+        }
+      }
+    }
+    ssss(treeList.value, parems.dirname)
+    // nodeMap[parems.dirname].children = formatToTree(list)
     if (list.length) {
       tableData.value = list.filter((item) => !item.is_dir)
     }
   }
+  console.log(treeList)
 }
 
 
@@ -139,7 +152,6 @@ const getfileList = async (parems) => {
 const addFile = (parems) => {
   dialog.isfile = parems
   visible.value = true
-  dialog.isfile = true
 }
 
 const closeFun = () => {
@@ -149,7 +161,7 @@ const closeFun = () => {
 }
 
 const handleNodeClick = (data: Tree) => {
-  if (data.is_dir) {
+  if (data.isDir) {
     getfileList({ dirname: data.path })
     dialog.path = data.path
     butDisabled.value = false

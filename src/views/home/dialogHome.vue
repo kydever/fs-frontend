@@ -106,8 +106,9 @@ const headersData = {
 const actionurl = ref(`/api/file/${ruleForm.id}`)
 
 watch(
-  ()=>[props.visible,props.path,props.data],
+  ()=>[props.visible,props.path,props.data,props.isfile],
   (val)=>{
+    console.log(val)
     dialogVisible.value = val[0]
     ruleForm.path = val[1]
     if(val[2].id){
@@ -236,6 +237,7 @@ const submitFun = async()=>{
         type: 'success'
       })
       dirname.value = ''
+      emit('getnewList','/')
       emit('closeFun')
     }
   } catch (error) {
