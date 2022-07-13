@@ -122,14 +122,14 @@ watch(
 const uploadRef = ref<UploadInstance>()
 
 const handleChange = (uploadFile) => {
-  if(!uploadFile.raw.type){
-    ElMessage({
-      message: '文件类型不支持',
-      type: 'warning'
-    })
-    uploadRef.value!.clearFiles()
-    return
-  }
+  // if(!uploadFile.raw.type){
+  //   ElMessage({
+  //     message: '文件类型不支持',
+  //     type: 'warning'
+  //   })
+  //   uploadRef.value!.clearFiles()
+  //   return
+  // }
   ruleForm.path = ruleForm.path === '/' ? `${ruleForm.path}${uploadFile.name}`:`${ruleForm.path}/${uploadFile.name}`
   isModify = false
 }
