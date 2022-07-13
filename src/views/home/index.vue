@@ -5,8 +5,15 @@
         <p>{{ path }}</p>
       </el-col>
       <el-col :span="6">
-        <el-button type="primary" class="butri male" @click="addFile(false)">新增文件夹</el-button>
-        <el-button type="primary" class="butri" @click="addFile(true)">新增文件</el-button>
+        <el-button
+          type="primary"
+          :disabled="butDisabled"
+          class="butri male"
+          @click="addFile(false)"
+        >
+          新增文件夹
+        </el-button>
+        <el-button type="primary" class="butri" @click="addNewFile">新增文件</el-button>
       </el-col>
     </el-row>
     <el-row>
@@ -46,6 +53,7 @@
         :path="dialog.path"
         :isfile="dialog.isfile"
         @closeFun="closeFun"
+        @getnewList="getnewList"
       />
     </el-row>
   </div>
@@ -91,13 +99,14 @@ const allid = ref([])
 
 const path = ref('/')
 
+const butDisabled = ref(false)
+
 const arrangementData = (parems,list)=>{
   if(parems.dirname === '/'){
     let newList = [list[0]]
     newList[0].children = list.slice(1,list.length)
     newList[0].children.map((item)=>keys.value.push(item.id))
     treeList.value = newList
-    console.log(treeList)
   }else{
     const recursionData = (dataList, path) => {
       for (const i in dataList) {
@@ -112,7 +121,9 @@ const arrangementData = (parems,list)=>{
       }
     }
     recursionData(treeList.value[0].children,parems.dirname)
-    tableData.value = list.filter((item)=>!item.is_dir)
+    if(list.length){
+      tableData.value = list.filter((item)=>!item.is_dir)
+    }
   }
 }
 
@@ -129,18 +140,24 @@ const getfileList = async(parems)=>{
 const addFile = (parems) => {
   dialog.isfile = parems
   visible.value = true
+  dialog.isfile = true
 }
 
 const closeFun = ()=>{
+  dialog.data = {}
+  dialog.path = '/'
   visible.value = false
-  getfileList({ dirname:'/' })
 }
 
 const handleNodeClick = ( data: Tree )=> {
-  dialog.path = data.path
-  path.value = data.path
   if( data.is_dir ){
     getfileList({ dirname: data.path })
+    dialog.path = data.path
+    butDisabled.value = false
+  }else{
+    let i = data.path.lastIndexOf('/')
+    dialog.path = data.path.substring(0,i)
+    butDisabled.value = true
   }
 }
 
@@ -174,9 +191,17 @@ const allDownloadFun = () => {
 }
 
 const reviseFun = (parems)=>{
-  console.log(parems)
   dialog.data = parems
   addFile(true)
+}
+
+const addNewFile = () => {
+  dialog.data = {}
+  addFile(true)
+}
+
+const getnewList = (parems) => {
+  getfileList({ dirname: parems })
 }
 
 getfileList({ dirname:'/' })

@@ -5,7 +5,11 @@ export function getFile(parems) {
   return get('/api/file', parems)
 }
 
-export function postFileId(id, parems) {
+export function postFileCreatedir(parems) {
+  return post(`/api/file/create-dir`, parems)
+}
+
+export function postFileId(id,parems) {
   return post(`/api/file/${id}`, parems)
 }
 

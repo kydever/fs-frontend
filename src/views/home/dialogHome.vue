@@ -24,10 +24,7 @@
           :on-success="successFun"
           :on-error="errorFun"
         >
-          <template #trigger>
-            <el-button type="primary">选择文件</el-button>
-          </template>
-          <el-button class="ml-3" type="success" @click="submitUpload">上传</el-button>
+          <el-button type="primary">选择文件</el-button>
         </el-upload>
       </el-form-item>
       <el-form-item label="备注">
@@ -44,7 +41,7 @@
           class="mx-1"
           closable
           :type="tag.type"
-          @close="handleClose(tag)"
+          @close="deleteTag(tag)"
         >
           {{ tag }}
         </el-tag>
@@ -54,7 +51,8 @@
     <template #footer>
       <span class="dialog-footer">
         <el-button @click="handleClose">关闭</el-button>
-        <el-button type="primary" @click="submitFun">确定</el-button>
+        <el-button v-if="!isfile" type="primary" @click="submitFun">确定</el-button>
+        <el-button v-if="isfile" type="success" @click="submitUpload">上传</el-button>
       </span>
     </template>
   </el-dialog>
@@ -65,7 +63,7 @@ import { ref, defineProps, watch, defineEmits, reactive } from 'vue'
 import type { UploadInstance } from 'element-plus'
 import { ElMessage } from 'element-plus'
 import { getToken } from '@/utils/auth'
-import { postFileId } from '@/api/home'
+import { postFileId, postFileCreatedir } from '@/api/home'
 import dayjs from 'dayjs'
 const props = defineProps({
   visible: {
@@ -82,7 +80,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['closeFun'])
+const emit = defineEmits(['closeFun','getnewList'])
 
 const dialogVisible = ref(false)
 
@@ -97,6 +95,10 @@ const dirname = ref('')
 
 const tagtext = ref('')
 
+let isModify = true
+
+let oldPath  = ''
+
 const headersData = {
   'work-wx-token': getToken()
 }
@@ -108,7 +110,6 @@ watch(
   (val)=>{
     dialogVisible.value = val[0]
     ruleForm.path = val[1]
-    // ruleForm.id = val[2]
     if(val[2].id){
       echoDataFun(val[2])
     }
@@ -128,7 +129,8 @@ const handleChange = (uploadFile) => {
     uploadRef.value!.clearFiles()
     return
   }
-  ruleForm.path = `${ruleForm.path}/${uploadFile.name}`
+  ruleForm.path = ruleForm.path === '/' ? `${ruleForm.path}${uploadFile.name}`:`${ruleForm.path}/${uploadFile.name}`
+  isModify = false
 }
 
 const handleExceed = () => {
@@ -140,11 +142,43 @@ const handleExceed = () => {
 
 const handleClose = () => {
   dialogVisible.value = false
+  ruleForm.path = '/'
+  ruleForm.id= 0,
+  ruleForm.summary= '',
+  ruleForm.tags= []
+  console.log(ruleForm)
   emit('closeFun')
 }
 
+const modifyFun = async()=>{
+  try {
+    const body ={
+      ...ruleForm,
+      path: oldPath
+    }
+    const { saved } = await postFileId(body.id,body)
+    if( saved ){
+      ElMessage({
+        message: '修改成功！',
+        type: 'success'
+      })
+      emit('closeFun')
+    }
+  } catch (error) {
+    console.log(error)
+  }
+}
+
 const submitUpload = () => {
-  if(!uploadRef.value!.submit()) return
+  if(!uploadRef.value!.submit()){
+    if(ruleForm.id>0 && isModify){
+      ruleForm.path = oldPath
+      modifyFun()
+    }
+  }
+  setTimeout(()=>{
+    emit('getnewList',ruleForm.path.substring(0, ruleForm.path.lastIndexOf('/')))
+  },100)
 }
 
 const successFun = (response) => {
@@ -157,11 +191,15 @@ const successFun = (response) => {
     ruleForm.summary = ''
     ruleForm.tags = []
     tagtext.value = ''
+    emit('closeFun')
   } else {
+    console.log(111)
     ElMessage({
       message: response.message,
       type: 'error'
     })
+    uploadRef.value!.clearFiles()
+    isModify = false
   }
 }
 
@@ -175,21 +213,26 @@ const errorFun = () => {
 
 const addTags = ()=>{
   if(!tagtext.value) return
-  ruleForm.tags.push(tagtext.value)
+  if(ruleForm.tags.indexOf(tagtext.value) === -1){
+    ruleForm.tags.push(tagtext.value)
+  }else{
+    ElMessage({
+      message: '不可添加重复标签',
+      type: 'error'
+    })
+  }
   tagtext.value = ''
 }
 
 const submitFun = async()=>{
   try {
     const body = {
-      id: 0,
-      dirname: dirname.value,
       path: ruleForm.path === '/' ? `${ruleForm.path}${dirname.value}`:`${ruleForm.path}/${dirname.value}`
     }
-    const { saved } = await postFileId(body.id,body)
+    const { saved } = await postFileCreatedir(body)
     if( saved ){
       ElMessage({
-        message: '文件新增成功！',
+        message: '文件夹新增成功！',
         type: 'success'
       })
       dirname.value = ''
@@ -201,12 +244,18 @@ const submitFun = async()=>{
 }
 
 const echoDataFun = (parems) => {
+  console.log(parems)
   let i = parems.path.lastIndexOf('/')
+  oldPath = JSON.parse(JSON.stringify(parems.path))
   ruleForm.summary = parems.summary
   ruleForm.id = parems.id
   ruleForm.tags = parems.tags
   ruleForm.path = parems.path.substring(0, i)
   actionurl.value = `/api/file/${ruleForm.id}`
+}
+
+const deleteTag = (tag:string) => {
+  ruleForm.tags.splice(ruleForm.tags.indexOf(tag), 1)
 }
 
 </script>
