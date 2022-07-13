@@ -148,6 +148,7 @@ const handleClose = () => {
   ruleForm.id= 0,
   ruleForm.summary= '',
   ruleForm.tags= []
+  tagtext.value = ''
   console.log(ruleForm)
   emit('closeFun')
 }
