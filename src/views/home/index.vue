@@ -21,14 +21,14 @@
         <el-tree
           :data="treeList"
           :props="defaultProps"
-          node-key="id"
-          :default-expanded-keys="keys"
           accordion
           @node-click="handleNodeClick"
         >
           <template #default="scope">
             <div class="custom-node">
-              <el-icon v-if="scope.node.data.is_dir"><Folder /></el-icon>
+              <el-icon v-if="scope.node.data.isDir">
+                <Folder />
+              </el-icon>
               <span class="lable_sp">{{ scope.node.label }}</span>
             </div>
           </template>
@@ -67,16 +67,17 @@ import { ArrowRight } from '@element-plus/icons-vue'
 import { forEach, forIn } from 'lodash'
 import { Folder } from '@element-plus/icons-vue'
 import { download } from '@/utils/utils'
+
 const visible = ref(false)
 
 const defaultProps = {
   children: 'children',
   label: 'title',
-  isdir:'is_dir'
+  isdir: 'is_dir'
 }
 
 const dialog = reactive({
-  path:'/',
+  path: '/',
   isfile: true,
   data: {}
 })
@@ -85,13 +86,15 @@ interface Tree {
   id: number
   path: string
   title: string
-  'is_dir': boolean
+  isDir: boolean
+  summary?: string
+  tags?: string[]
   children?: Tree[]
 }
 
-const treeList = ref(<any>[])
+const treeList = ref(<Tree[]>[])
 
-const keys = ref([])
+const nodeMap = ref({})
 
 const tableData = ref([])
 
@@ -101,34 +104,30 @@ const path = ref('/')
 
 const butDisabled = ref(false)
 
-const arrangementData = (parems,list)=>{
-  if(parems.dirname === '/'){
-    let newList = [list[0]]
-    newList[0].children = list.slice(1,list.length)
-    newList[0].children.map((item)=>keys.value.push(item.id))
-    treeList.value = newList
-  }else{
-    const recursionData = (dataList, path) => {
-      for (const i in dataList) {
-        let item = dataList[i]
-        if(item.is_dir && item.path === path){
-          item.children = list
-        } else {
-          if(item.children){
-            recursionData(item.children,path)
-          }
-        }
-      }
-    }
-    recursionData(treeList.value[0].children,parems.dirname)
-    if(list.length){
-      tableData.value = list.filter((item)=>!item.is_dir)
+const formatToTree = (list): Tree[] => {
+  let result: Tree[] = []
+  for (let i = 0; i < list.length; i++) {
+    let item = list[i]
+    let tree = { ...item, isDir: item.is_dir }
+    result.push(tree)
+    nodeMap[tree.path] = tree
+  }
+  return result
+}
+
+const arrangementData = (parems, list) => {
+  if (parems.dirname === '/') {
+    treeList.value = formatToTree(list)
+  } else {
+    nodeMap[parems.dirname].children = formatToTree(list)
+    if (list.length) {
+      tableData.value = list.filter((item) => !item.is_dir)
     }
   }
 }
 
 
-const getfileList = async(parems)=>{
+const getfileList = async (parems) => {
   try {
     const { list } = await getFile(parems)
     arrangementData(parems, list)
@@ -143,33 +142,33 @@ const addFile = (parems) => {
   dialog.isfile = true
 }
 
-const closeFun = ()=>{
+const closeFun = () => {
   dialog.data = {}
   dialog.path = '/'
   visible.value = false
 }
 
-const handleNodeClick = ( data: Tree )=> {
-  if( data.is_dir ){
+const handleNodeClick = (data: Tree) => {
+  if (data.is_dir) {
     getfileList({ dirname: data.path })
     dialog.path = data.path
     butDisabled.value = false
-  }else{
+  } else {
     let i = data.path.lastIndexOf('/')
-    dialog.path = data.path.substring(0,i)
+    dialog.path = data.path.substring(0, i)
     butDisabled.value = true
   }
 }
 
-const downloadfile = async(parems) => {
+const downloadfile = async (parems) => {
   try {
     const body = {
       ids: parems
     }
     const { list } = await postFileDownloadUrl(body)
-    list.map((item)=>{
-      if(item.url){
-        download(item.url,'')
+    list.map((item) => {
+      if (item.url) {
+        download(item.url, '')
       }
     })
   } catch (error) {
@@ -177,20 +176,22 @@ const downloadfile = async(parems) => {
   }
 }
 
-const downloadFun = (parems)=>{
+const downloadFun = (parems) => {
   downloadfile([parems.id])
 }
 
 const handleSelectionChange = (val) => {
   allid.value = []
-  allid.value = val.map((item)=>{return item.id})
+  allid.value = val.map((item) => {
+    return item.id
+  })
 }
 
 const allDownloadFun = () => {
   downloadfile(allid.value)
 }
 
-const reviseFun = (parems)=>{
+const reviseFun = (parems) => {
   dialog.data = parems
   addFile(true)
 }
@@ -204,30 +205,36 @@ const getnewList = (parems) => {
   getfileList({ dirname: parems })
 }
 
-getfileList({ dirname:'/' })
+getfileList({ dirname: '/' })
 
 </script>
 
 <style scoped lang="scss">
-.bread{
+.bread {
   padding-bottom: 20px;
 }
-.treebg{
+
+.treebg {
   background-color: #fff;
 }
-.butri{
+
+.butri {
   float: right;
 }
-.male{
+
+.male {
   margin-left: 8px;
 }
-.lable_sp{
+
+.lable_sp {
   padding-left: 8px;
 }
-.table_div{
+
+.table_div {
   padding-left: 10px;
 }
-.ma_bo{
+
+.ma_bo {
   margin-bottom: 20px;
 }
 </style>
