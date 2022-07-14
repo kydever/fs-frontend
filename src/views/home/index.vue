@@ -45,7 +45,7 @@
       </el-col>
       <dialogHome
         :data="dialog.data"
-        :visible="visible"
+        :visible="dialog.visible"
         :path="dialog.path"
         :isfile="dialog.isfile"
         @closeFun="closeFun"
@@ -56,21 +56,11 @@
 </template>
 
 <script lang="ts" setup>
-import { defineComponent, computed, ref, reactive } from 'vue'
-import dialogHome from './dialogHome.vue'
+import { ref, reactive } from 'vue'
 import { getFile, postFileDownloadUrl } from '@/api/home'
 import { ArrowRight } from '@element-plus/icons-vue'
-import { forEach, forIn } from 'lodash'
-import { Folder } from '@element-plus/icons-vue'
 import { download } from '@/utils/utils'
-
-const visible = ref(false)
-
-const dialog = reactive({
-  path: '/',
-  isfile: true,
-  data: {}
-})
+import dialogHome from './dialogHome.vue'
 
 interface Tree {
   id: number
@@ -82,9 +72,23 @@ interface Tree {
   children?: Tree[]
 }
 
-const allId = ref([])
+interface dialogType {
+  path: string
+  isfile: boolean
+  data?: any
+  visible: boolean
+}
 
-const tableData = ref([])
+const dialog = reactive<dialogType>({
+  path: '/',
+  isfile: true,
+  data: {},
+  visible: false
+})
+
+const allId = ref<number[]>([])
+
+const tableData = ref<Tree[]>([])
 
 const pathList = ref(<string[]>['根目录'])
 
@@ -101,13 +105,13 @@ const getfileList = async (parems) => {
 
 const addFile = (parems:boolean) => {
   dialog.isfile = parems
-  visible.value = true
+  dialog.visible = true
 }
 
 const closeFun = () => {
   dialog.data = {}
   dialog.path = '/'
-  visible.value = false
+  dialog.visible = false
 }
 
 const handleNodeClick = (data: Tree) => {
@@ -172,7 +176,7 @@ const getnewList = (parems: string) => {
 const backnavFun = (num: number)=>{
   let path = ''
   if(num){
-    pathList.value.slice(0,num+1).map((item)=>{
+    pathList.value.slice(0, num+1).map((item)=>{
       if(item === '根目录'){
         path += ``
       }else{
