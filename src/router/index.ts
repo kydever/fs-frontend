@@ -23,10 +23,10 @@ NProgress.configure({
 
 // 导航守卫
 router.beforeEach((to, from, next) => {
-  // if (!getToken() && to.name !== 'login') {
-  //   toWarrant()
-  //   return
-  // }
+  if (!getToken() && to.name !== 'login') {
+    toWarrant()
+    return
+  }
   // 页面加载进度条
   if (to.name !== from.name) {
     NProgress.start()
