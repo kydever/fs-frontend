@@ -8,7 +8,7 @@
   </div>
 </template>
 <script lang="ts" setup>
-import { ref, defineProps, defineEmits } from 'vue'
+import { ref, defineProps, defineEmits, defineExpose } from 'vue'
 import { postFileCreatedir } from '@/api/home'
 import { ElMessage } from 'element-plus'
 const props = defineProps({
@@ -20,8 +20,12 @@ const emit = defineEmits(['closeFun', 'getnewList'])
 
 const folderName = ref<string>('')
 
-const closeDialog = () => {
+const resetDataFun = () => {
   folderName.value = ''
+}
+
+const closeDialog = () => {
+  resetDataFun()
   emit('closeFun')
 }
 
@@ -43,6 +47,7 @@ const submitUpload = async ()=>{
     console.log(error)
   }
 }
+defineExpose({ resetDataFun })
 </script>
 <style scoped lang="scss">
 .but_div{

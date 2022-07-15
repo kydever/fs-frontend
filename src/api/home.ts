@@ -13,6 +13,10 @@ export function postFileId(id,parems) {
   return post(`/api/file/${id}`, parems)
 }
 
+export function postFileUpload(parems) {
+  return post(`/api/file/upload`, parems)
+}
+
 export function postFileDownloadUrl(parems) {
   return post(`/api/file/download-url`, parems)
 }

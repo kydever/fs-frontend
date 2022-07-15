@@ -8,12 +8,16 @@
   >
     <uploadFile
       v-if="isfile"
+      ref="uploadFileRef"
       :path="path"
+      :modify-data="modifyData"
+      :ismodify="ismodify"
       @closeFun="handleClose"
       @getnewList="getnewList"
     />
     <uploadFolder
       v-if="!isfile"
+      ref="uploadFolderRef"
       :path="path"
       @closeFun="handleClose"
       @getnewList="getnewList"
@@ -22,10 +26,10 @@
 </template>
 
 <script lang="ts" setup>
-import { defineProps, defineEmits } from 'vue'
+import { defineProps, defineEmits, ref } from 'vue'
 import uploadFile from './uploadFile.vue'
 import uploadFolder from './uploadFolder.vue'
-defineProps({
+const props = defineProps({
   visible: {
     type: Boolean,
     required: true
@@ -36,14 +40,25 @@ defineProps({
   isfile:{
     type: Boolean
   },
-  data:{
+  ismodify:{
+    type: Boolean
+  },
+  modifyData:{
     type: Object
   }
 })
 
+const uploadFileRef = ref(null)
+const uploadFolderRef = ref(null)
+
 const emit = defineEmits(['closeFun','getnewList'])
 
 const handleClose = () => {
+  if (props.isfile) {
+    uploadFileRef.value.resetDataFun()
+  }else{
+    uploadFolderRef.value.resetDataFun()
+  }
   emit('closeFun')
 }
 

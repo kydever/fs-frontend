@@ -44,7 +44,8 @@
         </el-table>
       </el-col>
       <dialogHome
-        :data="dialog.data"
+        :ismodify="dialog.ismodify"
+        :modify-data="dialog.modifyData"
         :visible="dialog.visible"
         :path="dialog.path"
         :isfile="dialog.isfile"
@@ -75,15 +76,17 @@ interface Tree {
 interface dialogType {
   path: string
   isfile: boolean
-  data?: any
+  modifyData?: any
   visible: boolean
+  ismodify:boolean
 }
 
 const dialog = reactive<dialogType>({
   path: '/',
   isfile: true,
-  data: {},
-  visible: false
+  modifyData: {},
+  visible: false,
+  ismodify: false
 })
 
 const allId = ref<number[]>([])
@@ -109,9 +112,10 @@ const addFile = (parems:boolean) => {
 }
 
 const closeFun = () => {
-  dialog.data = {}
+  dialog.modifyData = {}
   dialog.path = '/'
   dialog.visible = false
+  dialog.ismodify = false
 }
 
 const handleNodeClick = (data: Tree) => {
@@ -160,12 +164,14 @@ const allDownloadFun = () => {
 }
 
 const reviseFun = (parems: Tree) => {
-  dialog.data = parems
+  dialog.modifyData = parems
+  dialog.ismodify = true
   addFile(true)
 }
 
 const addNewFile = () => {
-  dialog.data = {}
+  dialog.modifyData = {}
+  dialog.ismodify = false
   addFile(true)
 }
 

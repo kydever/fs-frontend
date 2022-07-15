@@ -1,10 +1,21 @@
 <template>
   <div>
+    <div>
+      <el-radio-group
+        v-model="multiple"
+        :disabled="disabled"
+        class="ml-4"
+        @change="radioChangeFun"
+      >
+        <el-radio :label="0" size="large">单文件上传</el-radio>
+        <el-radio :label="1" size="large">多文件上传</el-radio>
+      </el-radio-group>
+    </div>
     <el-upload
       ref="uploadRef"
       class="upload-demo"
       drag
-      :multiple="true"
+      :multiple=" multiple ? true : false "
       action=""
       :auto-upload="false"
       :on-change="handleChange"
@@ -34,8 +45,8 @@
   </div>
 </template>
 <script lang="ts" setup>
-import { ref, defineProps, watch, defineEmits, reactive } from 'vue'
-import { postFileId } from '@/api/home'
+import { ref, defineProps, watch, defineEmits, reactive, defineExpose } from 'vue'
+import { postFileId, postFileUpload } from '@/api/home'
 import { ElMessage } from 'element-plus'
 import type { UploadInstance } from 'element-plus'
 
@@ -44,10 +55,17 @@ const uploadRef = ref<UploadInstance>()
 const props = defineProps({
   path:{
     type: String
+  },
+  ismodify:{
+    type :Boolean
+  },
+  modifyData:{
+    type:Object
   }
 })
 
 const emit = defineEmits(['closeFun', 'getnewList'])
+
 
 interface ruleFormtype {
     id: string
@@ -65,46 +83,150 @@ const ruleForm = reactive<ruleFormtype>({
   tags: []
 })
 
+const flieName = ref<string>('')
+
 const tagtext = ref<string>('')
 
-let fromList:any[] = []
+const disabled = ref<boolean>(false)
+
+const lodPath = ref<string>('')
+
+const isChoiceFlie = ref<boolean>(false)
+
+let formData = new FormData()
+
+let i = 0
+
+const multiple = ref<number>(0)
+
+// 回显
+const echoFun = (parems) =>{
+  disabled.value = true
+  console.log(parems)
+  ruleForm.summary = parems.summary
+  ruleForm.tags = parems.tags
+  ruleForm.id = parems.id
+  lodPath.value = JSON.parse(JSON.stringify(parems.path))
+}
 
 watch(
-  ()=>props.path,
-  (val)=>{
-    ruleForm.path = val || '/'
+  ()=>[props.path,props.ismodify,props.modifyData],
+  (val:any[])=>{
+    ruleForm.path = val[0] || '/'
+    if(val[1]){
+      echoFun(val[2])
+    }
   },
   { immediate: true }
 )
 
+// 选择文件
 const handleChange = (uploadFile)=>{
-  console.log(uploadFile)
-  let formData = new FormData()
-  formData.append('file',uploadFile.raw)
-  formData.append('path', ruleForm.path==='/' ? `/${uploadFile.name}` : `${ruleForm.path}/${uploadFile.name}`)
-  fromList.push(formData)
+  if(multiple.value){
+    formData.append(`files${i}`,uploadFile.raw)
+    i++
+  }else{
+    formData.append('file',uploadFile.raw)
+    flieName.value = uploadFile.name
+    isChoiceFlie.value = true
+  }
+  console.log(flieName.value)
 }
 
-const submitUpload = async()=>{
+// 重置上传组件和FormData
+const radioChangeFun = () => {
+  uploadRef.value?.clearFiles()
+  formData = new FormData()
+}
+
+// 重置数据
+const resetDataFun = ()=>{
+  ruleForm.id = '0'
+  ruleForm.path = '/'
+  ruleForm.file = ''
+  ruleForm.summary = ''
+  ruleForm.tags = []
+  tagtext.value = ''
+  multiple.value = 0
+  isChoiceFlie.value = false
+  lodPath.value = ''
+  radioChangeFun()
+}
+
+// 上传后获取新的数据
+const getnewList = () => {
+  emit('getnewList',ruleForm.path)
+  emit('closeFun')
+}
+
+// 回调成功调用
+const successFial = ()=>{
+  ElMessage({
+    message: '文件上传成功',
+    type: 'success'
+  })
+  getnewList()
+  resetDataFun()
+}
+
+// 给formData对象添加数据
+const addKeyData = () =>{
+  formData.append('summary', ruleForm.summary)
+  formData.append('tags', ruleForm.tags.toString())
+}
+
+// 单文件提交
+const singleFileFun = async()=>{
   try {
-    console.log(fromList)
-    fromList.map( async (item)=>{
-      item.append('summary', ruleForm.summary)
-      item.append('tags', ruleForm.tags)
-      const res = await postFileId(ruleForm.id,item)
-      console.log(res)
-    })
-    uploadRef.value?.clearFiles()
-    // 会导致有bug
-    setTimeout(()=>{
-      emit('closeFun')
-      emit('getnewList', props.path)
-    },500)
+    // 判断修改是否提交文件
+    if(isChoiceFlie.value){
+      formData.append('path', ruleForm.path==='/' ? `/${flieName.value}` : `${ruleForm.path}/${flieName.value}`)
+    } else {
+      formData.append('path', lodPath.value)
+    }
+    addKeyData()
+    const { saved } = await postFileId(ruleForm.id,formData)
+    if(saved){
+      successFial()
+    }
   } catch (error) {
+    uploadRef.value?.clearFiles()
     console.log(error)
+  } finally {
+    formData = new FormData()
   }
 }
 
+// 多文件提交
+const multipleFilesFun =  async() =>{
+  try {
+    formData.append('dirname', ruleForm.path==='/' ? `` : ruleForm.path)
+    addKeyData()
+    const { saved } = await postFileUpload(formData)
+    console.log(saved)
+    if(saved){
+      successFial()
+    }
+  } catch (error) {
+    uploadRef.value?.clearFiles()
+    console.log(error)
+  } finally {
+    formData = new FormData()
+  }
+}
+
+// 提交方法
+const submitUpload = ()=>{
+  if(multiple.value){
+    // 多文件提交
+    multipleFilesFun()
+  }else{
+    // 单文件提交
+    singleFileFun()
+  }
+}
+
+// tag添加数据
 const addTagFun = ()=>{
   if(!tagtext.value) return
   if(ruleForm.tags.indexOf(tagtext.value) === -1){
@@ -119,19 +241,19 @@ const addTagFun = ()=>{
   }
 }
 
+// tag删除数据
 const handleClose = (tag: string) => {
   ruleForm.tags.splice(ruleForm.tags.indexOf(tag), 1)
 }
 
+// 关闭事件
 const closeDialog = () => {
-  ruleForm.id = '0'
-  ruleForm.path = '/'
-  ruleForm.file = ''
-  ruleForm.summary = ''
-  ruleForm.tags = []
-  tagtext.value = ''
+  resetDataFun()
   emit('closeFun')
 }
+
+// 暴露重置方法
+defineExpose({ resetDataFun })
 
 </script>
 <style scoped lang="scss">
