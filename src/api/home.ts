@@ -20,3 +20,11 @@ export function postFileUpload(parems) {
 export function postFileDownloadUrl(parems) {
   return post(`/api/file/download-url`, parems)
 }
+
+export function getFileTree() {
+  return get(`/api/file/tree`)
+}
+
+export function postFileDelete(parems) {
+  return post(`/api/file/delete`, parems)
+}

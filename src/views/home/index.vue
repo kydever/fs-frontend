@@ -1,22 +1,9 @@
 <template>
   <div>
     <el-row class="bread">
-      <el-col :span="18">
-        <el-breadcrumb :separator-icon="ArrowRight">
-          <el-breadcrumb-item
-            v-for="(item, index) in pathList"
-            :key="index"
-            :class=" index < pathList.length - 1 ? 'isfolder' : ''"
-            @click="backnavFun(index)"
-          >
-            {{ item }}
-          </el-breadcrumb-item>
-        </el-breadcrumb>
-      </el-col>
-      <el-col :span="6">
+      <el-col :span="24">
         <el-button
           type="primary"
-          :disabled="butDisabled"
           class="butri male"
           @click="addFile(false)"
         >
@@ -26,19 +13,20 @@
       </el-col>
     </el-row>
     <el-row>
-      <el-col :span="24" class="table_div">
-        <el-button class="ma_bo butri" type="primary" @click="allDownloadFun">批量下载</el-button>
+      <el-col :span="6">
+        <el-tree :data="treeData" :props="defaultProps" @node-click="handleNodeClick" />
+      </el-col>
+      <el-col :span="18" class="table_div">
+        <el-button class="ma_bo butri male" type="primary" @click="allDownloadFun">批量下载</el-button>
+        <el-button class="ma_bo butri" type="primary" @click="allDeleteFun">批量删除</el-button>
         <el-table :data="tableData" style="width: 100%" @selection-change="handleSelectionChange">
           <el-table-column type="selection" width="55" />
-          <el-table-column label="文件名">
-            <template #default="scope">
-              <span :class="scope.row.is_dir ? 'isfolder' : ''" @click="handleNodeClick(scope.row)"> {{ scope.row.title }} </span>
-            </template>
-          </el-table-column>
+          <el-table-column label="文件名" prop="title" />
           <el-table-column label="操作">
             <template #default="scope">
               <el-button v-if="!scope.row.is_dir" type="primary" @click="reviseFun(scope.row)">修改</el-button>
               <el-button v-if="!scope.row.is_dir" type="primary" @click="downloadFun(scope.row.id)">下载</el-button>
+              <el-button v-if="!scope.row.is_dir" type="primary" @click="deleteFun(scope.row.id)">删除</el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -58,9 +46,9 @@
 
 <script lang="ts" setup>
 import { ref, reactive } from 'vue'
-import { getFile, postFileDownloadUrl } from '@/api/home'
-import { ArrowRight } from '@element-plus/icons-vue'
+import { getFile, postFileDownloadUrl, getFileTree, postFileDelete } from '@/api/home'
 import { download } from '@/utils/utils'
+import { ElMessage, ElMessageBox  } from 'element-plus'
 import dialogHome from './dialogHome.vue'
 
 interface Tree {
@@ -89,13 +77,16 @@ const dialog = reactive<dialogType>({
   ismodify: false
 })
 
+const defaultProps = {
+  children: 'children',
+  label: 'title'
+}
+
 const allId = ref<number[]>([])
 
+const treeData = ref([])
+
 const tableData = ref<Tree[]>([])
-
-const pathList = ref(<string[]>['根目录'])
-
-const butDisabled = ref(false)
 
 const getfileList = async (parems) => {
   try {
@@ -119,17 +110,8 @@ const closeFun = () => {
 }
 
 const handleNodeClick = (data: Tree) => {
-  if (data.is_dir) {
-    getfileList({ dirname: data.path })
-    dialog.path = data.path
-    butDisabled.value = false
-  } else {
-    let i = data.path.lastIndexOf('/')
-    dialog.path = data.path.substring(0, i)
-    butDisabled.value = true
-  }
-  pathList.value.push(`${data.title}`)
-  console.log(pathList)
+  dialog.path = data.path
+  getfileList({ dirname: data.path })
 }
 
 const downloadfile = async (parems:number[]) => {
@@ -163,6 +145,60 @@ const allDownloadFun = () => {
   downloadfile(allId.value)
 }
 
+const deleteAjaxFun = async(parems:number[]) => {
+  try {
+    const { deleted } = await postFileDelete({ ids:parems })
+    if(deleted){
+      getfileList({ dirname: dialog.path })
+    }
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+const deleteFun = (parems:number) => {
+  ElMessageBox.confirm('是否确定删除此条文件?',
+    '提示',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    }
+  )
+    .then(() => {
+      deleteAjaxFun([parems])
+    })
+    .catch(() => {
+      ElMessage({
+        type: 'info',
+        message: '已取消'
+      })
+    })
+}
+
+const allDeleteFun = ()=> {
+  ElMessageBox.confirm('是否确定批量删除这些文件?',
+    '提示',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    }
+  )
+    .then(() => {
+      let arry = allId.value.map((item) => {
+        return item
+      })
+      deleteAjaxFun(arry)
+    })
+    .catch(() => {
+      ElMessage({
+        type: 'info',
+        message: '已取消'
+      })
+    })
+}
+
 const reviseFun = (parems: Tree) => {
   dialog.modifyData = parems
   dialog.ismodify = true
@@ -179,25 +215,19 @@ const getnewList = (parems: string) => {
   getfileList({ dirname: parems })
 }
 
-const backnavFun = (num: number)=>{
-  let path = ''
-  if(num){
-    pathList.value.slice(0, num+1).map((item)=>{
-      if(item === '根目录'){
-        path += ``
-      }else{
-        path += `/${item}`
-      }
-    })
-  }else{
-    path = '/'
+const getTressData = async()=>{
+  try {
+    const res = await getFileTree()
+    console.log(res)
+    treeData.value = res
+  } catch (error) {
+    console.log(error)
   }
-  pathList.value = pathList.value.slice(0, num+1)
-  getfileList({ dirname: path })
 }
 
 getfileList({ dirname: '/' })
 
+getTressData()
 </script>
 
 <style scoped lang="scss">
