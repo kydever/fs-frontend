@@ -1,7 +1,13 @@
 <template>
   <div>
     <el-row class="bread">
-      <el-col :span="24">
+      <el-col :span="18">
+        <el-breadcrumb separator="/">
+          <el-breadcrumb-item>根目录</el-breadcrumb-item>
+          <el-breadcrumb-item v-for="(item, index) in nav" :key="index">{{ item }}</el-breadcrumb-item>
+        </el-breadcrumb>
+      </el-col>
+      <el-col :span="6">
         <el-button
           type="primary"
           class="butri male"
@@ -82,6 +88,8 @@ const defaultProps = {
   label: 'title'
 }
 
+const nav = ref<string[]>([])
+
 const allId = ref<number[]>([])
 
 const treeData = ref([])
@@ -91,6 +99,10 @@ const tableData = ref<Tree[]>([])
 const getfileList = async (parems) => {
   try {
     const { list } = await getFile(parems)
+    let arry = parems.dirname.split('/')
+    nav.value = arry.splice(1,arry.length)
+    console.log(arry)
+    console.log(nav.value)
     tableData.value = list
   } catch (error) {
     console.log(error)
@@ -218,7 +230,6 @@ const getnewList = (parems: string) => {
 const getTressData = async()=>{
   try {
     const res = await getFileTree()
-    console.log(res)
     treeData.value = res
   } catch (error) {
     console.log(error)
