@@ -19,6 +19,8 @@
       action=""
       :auto-upload="false"
       :on-change="handleChange"
+      :on-exceed="handleExceed"
+      :limit="multiple ? 999 : 1"
     >
       <el-icon class="el-icon--upload"><upload-filled /></el-icon>
       <div class="el-upload__text">选择上传文件</div>
@@ -40,7 +42,14 @@
     </el-tag>
     <div class="but_div">
       <el-button plain @click="closeDialog">关闭</el-button>
-      <el-button type="primary" plain @click="submitUpload">上传</el-button>
+      <el-button
+        v-loading.fullscreen.lock="fullscreenLoading"
+        type="primary"
+        plain
+        @click="submitUpload"
+      >
+        上传
+      </el-button>
     </div>
   </div>
 </template>
@@ -93,6 +102,8 @@ const lodPath = ref<string>('')
 
 const isChoiceFlie = ref<boolean>(false)
 
+const fullscreenLoading = ref(false)
+
 let formData = new FormData()
 
 let i = 0
@@ -102,7 +113,6 @@ const multiple = ref<number>(0)
 // 回显
 const echoFun = (parems) =>{
   disabled.value = true
-  console.log(parems)
   ruleForm.summary = parems.summary
   ruleForm.tags = parems.tags
   ruleForm.id = parems.id
@@ -191,9 +201,9 @@ const singleFileFun = async()=>{
     }
   } catch (error) {
     uploadRef.value?.clearFiles()
-    console.log(error)
   } finally {
     formData = new FormData()
+    fullscreenLoading.value = false
   }
 }
 
@@ -203,7 +213,6 @@ const multipleFilesFun =  async() =>{
     formData.append('dirname', ruleForm.path==='/' ? `` : ruleForm.path)
     addKeyData()
     const { saved } = await postFileUpload(formData)
-    console.log(saved)
     if(saved){
       successFial()
     }
@@ -212,11 +221,13 @@ const multipleFilesFun =  async() =>{
     console.log(error)
   } finally {
     formData = new FormData()
+    fullscreenLoading.value = false
   }
 }
 
 // 提交方法
 const submitUpload = ()=>{
+  fullscreenLoading.value = true
   if(multiple.value){
     // 多文件提交
     multipleFilesFun()
@@ -250,6 +261,13 @@ const handleClose = (tag: string) => {
 const closeDialog = () => {
   resetDataFun()
   emit('closeFun')
+}
+
+const handleExceed = () => {
+  ElMessage({
+    message: '文件数量超过限制',
+    type: 'success'
+  })
 }
 
 // 暴露重置方法

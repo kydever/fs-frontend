@@ -3,7 +3,7 @@
     <el-input v-model="folderName" placeholder="请输入文件夹名称" />
     <div class="but_div">
       <el-button plain @click="closeDialog">关闭</el-button>
-      <el-button type="primary" @click="submitUpload">创建</el-button>
+      <el-button v-loading.fullscreen.lock="fullscreenLoading" type="primary" @click="submitUpload">创建</el-button>
     </div>
   </div>
 </template>
@@ -20,6 +20,8 @@ const emit = defineEmits(['closeFun', 'getnewList'])
 
 const folderName = ref<string>('')
 
+const fullscreenLoading = ref(false)
+
 const resetDataFun = () => {
   folderName.value = ''
 }
@@ -30,6 +32,7 @@ const closeDialog = () => {
 }
 
 const submitUpload = async ()=>{
+  fullscreenLoading.value = true
   try {
     const body = {
       path: props.path === '/' ? `/${folderName.value}`: `${props.path}/${folderName.value}`
@@ -45,6 +48,8 @@ const submitUpload = async ()=>{
     }
   } catch (error) {
     console.log(error)
+  } finally {
+    fullscreenLoading.value = false
   }
 }
 defineExpose({ resetDataFun })

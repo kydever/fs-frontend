@@ -97,7 +97,6 @@ const treeData = ref([])
 const tableData = ref<Tree[]>([])
 
 const getTressData = async()=>{
-  console.log(111)
   try {
     const res = await getFileTree()
     treeData.value = res
@@ -124,7 +123,7 @@ const addFile = (parems:boolean) => {
 
 const closeFun = () => {
   dialog.modifyData = {}
-  dialog.path = '/'
+  // dialog.path = '/'
   dialog.visible = false
   dialog.ismodify = false
 }
@@ -169,6 +168,7 @@ const deleteAjaxFun = async(parems:number[]) => {
   try {
     const { deleted } = await postFileDelete({ ids:parems })
     if(deleted){
+      console.log(dialog.path)
       getfileList({ dirname: dialog.path })
     }
   } catch (error) {
