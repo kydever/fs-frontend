@@ -15,14 +15,13 @@ export default ({ command }: ConfigEnv): UserConfigExport => {
     ],
     server: {
       port: 9501,
-      host: '127.0.0.1',
       open: true,
       proxy: {
         '/api': {
-          target: 'http://192.168.2.166:9501/',
+          target: 'http://fs-server.knowyourself.cc',
           changeOrigin: true, //是否跨域
           ws: true,
-          rewrite: (path: string) => path.replace(/api/, '/')
+          rewrite: (path: string) => path
         }
       }
     },
