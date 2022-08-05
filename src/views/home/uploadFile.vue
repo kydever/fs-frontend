@@ -140,7 +140,6 @@ const handleChange = (uploadFile)=>{
     flieName.value = uploadFile.name
     isChoiceFlie.value = true
   }
-  console.log(flieName.value)
 }
 
 // 重置上传组件和FormData

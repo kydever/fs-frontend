@@ -25,7 +25,12 @@
       <el-col :span="18" class="table_div">
         <el-button class="ma_bo butri male" type="primary" @click="allDownloadFun">批量下载</el-button>
         <el-button class="ma_bo butri" type="primary" @click="allDeleteFun">批量删除</el-button>
-        <el-table :data="tableData" style="width: 100%" @selection-change="handleSelectionChange">
+        <el-table
+          v-loading="tableLoading"
+          :data="tableData"
+          style="width: 100%"
+          @selection-change="handleSelectionChange"
+        >
           <el-table-column type="selection" width="55" />
           <el-table-column label="文件名" prop="title" />
           <el-table-column label="操作">
@@ -54,7 +59,7 @@
 import { ref, reactive } from 'vue'
 import { getFile, postFileDownloadUrl, getFileTree, postFileDelete } from '@/api/home'
 import { download } from '@/utils/utils'
-import { ElMessage, ElMessageBox  } from 'element-plus'
+import { ElMessage, ElMessageBox, ElLoading } from 'element-plus'
 import dialogHome from './dialogHome.vue'
 
 interface Tree {
@@ -96,6 +101,10 @@ const treeData = ref([])
 
 const tableData = ref<Tree[]>([])
 
+const tableLoading = ref<boolean>(false)
+
+const loading = ref<any>(null)
+
 const getTressData = async()=>{
   try {
     const res = await getFileTree()
@@ -106,6 +115,7 @@ const getTressData = async()=>{
 }
 
 const getfileList = async (parems) => {
+  tableLoading.value = true
   try {
     const { list } = await getFile(parems)
     let arry = parems.dirname.split('/')
@@ -113,6 +123,8 @@ const getfileList = async (parems) => {
     tableData.value = list
   } catch (error) {
     console.log(error)
+  } finally {
+    tableLoading.value = false
   }
 }
 
@@ -146,6 +158,8 @@ const downloadfile = async (parems:number[]) => {
     })
   } catch (error) {
     console.log(error)
+  } finally {
+    loading.value.close()
   }
 }
 
@@ -161,6 +175,14 @@ const handleSelectionChange = (val) => {
 }
 
 const allDownloadFun = () => {
+  if(!allId.value.length) {
+    ElMessage({
+      type: 'warning',
+      message: '未选择下载文件'
+    })
+    return
+  }
+  loading.value = ElLoading.service({ fullscreen: true })
   downloadfile(allId.value)
 }
 
@@ -168,11 +190,12 @@ const deleteAjaxFun = async(parems:number[]) => {
   try {
     const { deleted } = await postFileDelete({ ids:parems })
     if(deleted){
-      console.log(dialog.path)
       getfileList({ dirname: dialog.path })
     }
   } catch (error) {
     console.log(error)
+  } finally {
+    loading.value.close()
   }
 }
 
@@ -197,6 +220,13 @@ const deleteFun = (parems:number) => {
 }
 
 const allDeleteFun = ()=> {
+  if(!allId.value.length) {
+    ElMessage({
+      type: 'warning',
+      message: '未选择删除文件'
+    })
+    return
+  }
   ElMessageBox.confirm('是否确定批量删除这些文件?',
     '提示',
     {
@@ -206,6 +236,7 @@ const allDeleteFun = ()=> {
     }
   )
     .then(() => {
+      loading.value = ElLoading.service({ fullscreen: true })
       let arry = allId.value.map((item) => {
         return item
       })
