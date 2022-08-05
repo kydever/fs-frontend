@@ -8,7 +8,7 @@ import { toWarrant } from '@/utils/utils'
 // 创建axios实例
 const service = axios.create({
   baseURL: '',
-  timeout: 5000
+  timeout: 300000
 })
 
 // 添加请求拦截器

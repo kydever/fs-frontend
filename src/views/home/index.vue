@@ -96,13 +96,21 @@ const treeData = ref([])
 
 const tableData = ref<Tree[]>([])
 
+const getTressData = async()=>{
+  console.log(111)
+  try {
+    const res = await getFileTree()
+    treeData.value = res
+  } catch (error) {
+    console.log(error)
+  }
+}
+
 const getfileList = async (parems) => {
   try {
     const { list } = await getFile(parems)
     let arry = parems.dirname.split('/')
     nav.value = arry.splice(1,arry.length)
-    console.log(arry)
-    console.log(nav.value)
     tableData.value = list
   } catch (error) {
     console.log(error)
@@ -225,15 +233,7 @@ const addNewFile = () => {
 
 const getnewList = (parems: string) => {
   getfileList({ dirname: parems })
-}
-
-const getTressData = async()=>{
-  try {
-    const res = await getFileTree()
-    treeData.value = res
-  } catch (error) {
-    console.log(error)
-  }
+  getTressData()
 }
 
 getfileList({ dirname: '/' })
