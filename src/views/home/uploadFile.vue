@@ -43,7 +43,6 @@
     <div class="but_div">
       <el-button plain @click="closeDialog">关闭</el-button>
       <el-button
-        v-loading.fullscreen.lock="fullscreenLoading"
         type="primary"
         plain
         @click="submitUpload"
@@ -56,7 +55,7 @@
 <script lang="ts" setup>
 import { ref, defineProps, watch, defineEmits, reactive, defineExpose } from 'vue'
 import { postFileId, postFileUpload } from '@/api/home'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElLoading } from 'element-plus'
 import type { UploadInstance } from 'element-plus'
 
 const uploadRef = ref<UploadInstance>()
@@ -102,7 +101,7 @@ const lodPath = ref<string>('')
 
 const isChoiceFlie = ref<boolean>(false)
 
-const fullscreenLoading = ref(false)
+const fullscreenLoading = ref<any>(null)
 
 let formData = new FormData()
 
@@ -117,6 +116,7 @@ const echoFun = (parems) =>{
   ruleForm.tags = parems.tags
   ruleForm.id = parems.id
   lodPath.value = JSON.parse(JSON.stringify(parems.path))
+  console.log(lodPath)
 }
 
 watch(
@@ -184,6 +184,14 @@ const addKeyData = () =>{
   formData.append('tags', ruleForm.tags.toString())
 }
 
+const lodingOpen = () => {
+  fullscreenLoading.value = ElLoading.service({
+    lock: true,
+    text: 'Loading',
+    background: 'rgba(0, 0, 0, 0.7)'
+  })
+}
+
 // 单文件提交
 const singleFileFun = async()=>{
   try {
@@ -191,8 +199,16 @@ const singleFileFun = async()=>{
     if(isChoiceFlie.value){
       formData.append('path', ruleForm.path==='/' ? `/${flieName.value}` : `${ruleForm.path}/${flieName.value}`)
     } else {
+      if(lodPath.value == ''){
+        ElMessage({
+          message: '请选择文件之后再上传',
+          type: 'warning'
+        })
+        return
+      }
       formData.append('path', lodPath.value)
     }
+    lodingOpen()
     addKeyData()
     const { saved } = await postFileId(ruleForm.id,formData)
     if(saved){
@@ -202,15 +218,17 @@ const singleFileFun = async()=>{
     uploadRef.value?.clearFiles()
   } finally {
     formData = new FormData()
-    fullscreenLoading.value = false
+    if(!fullscreenLoading.value) return
+    fullscreenLoading.value.close()
   }
 }
 
 // 多文件提交
-const multipleFilesFun =  async() =>{
+const multipleFilesFun =  async() => {
   try {
     formData.append('dirname', ruleForm.path==='/' ? `` : ruleForm.path)
     addKeyData()
+    lodingOpen()
     const { saved } = await postFileUpload(formData)
     if(saved){
       successFial()
@@ -220,13 +238,13 @@ const multipleFilesFun =  async() =>{
     console.log(error)
   } finally {
     formData = new FormData()
-    fullscreenLoading.value = false
+    if(!fullscreenLoading.value) return
+    fullscreenLoading.value.close()
   }
 }
 
 // 提交方法
-const submitUpload = ()=>{
-  fullscreenLoading.value = true
+const submitUpload = ()=> {
   if(multiple.value){
     // 多文件提交
     multipleFilesFun()

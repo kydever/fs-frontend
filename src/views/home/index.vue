@@ -182,7 +182,11 @@ const allDownloadFun = () => {
     })
     return
   }
-  loading.value = ElLoading.service({ fullscreen: true })
+  loading.value = ElLoading.service({
+    lock: true,
+    text: 'Loading',
+    background: 'rgba(0, 0, 0, 0.7)'
+  })
   downloadfile(allId.value)
 }
 
@@ -236,7 +240,11 @@ const allDeleteFun = ()=> {
     }
   )
     .then(() => {
-      loading.value = ElLoading.service({ fullscreen: true })
+      loading.value = ElLoading.service({
+        lock: true,
+        text: 'Loading',
+        background: 'rgba(0, 0, 0, 0.7)'
+      })
       let arry = allId.value.map((item) => {
         return item
       })
