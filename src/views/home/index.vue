@@ -20,7 +20,14 @@
     </el-row>
     <el-row>
       <el-col :span="6">
-        <el-tree :data="treeData" :props="defaultProps" @node-click="handleNodeClick" />
+        <el-tree
+          :data="treeData"
+          :props="defaultProps"
+          node-key="title"
+          :accordion="true"
+          :default-expanded-keys="nav"
+          @node-click="handleNodeClick"
+        />
       </el-col>
       <el-col :span="18" class="table_div">
         <el-button class="ma_bo butri male" type="primary" @click="allDownloadFun">批量下载</el-button>
