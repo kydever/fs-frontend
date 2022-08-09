@@ -116,7 +116,6 @@ const echoFun = (parems) =>{
   ruleForm.tags = parems.tags
   ruleForm.id = parems.id
   lodPath.value = JSON.parse(JSON.stringify(parems.path))
-  console.log(lodPath)
 }
 
 watch(
