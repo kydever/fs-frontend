@@ -191,6 +191,7 @@ const allDownloadFun = () => {
 }
 
 const deleteAjaxFun = async(parems:number[]) => {
+  tableLoading.value = true
   try {
     const { deleted } = await postFileDelete({ ids:parems })
     if(deleted){
@@ -199,7 +200,7 @@ const deleteAjaxFun = async(parems:number[]) => {
   } catch (error) {
     console.log(error)
   } finally {
-    loading.value.close()
+    tableLoading.value = false
   }
 }
 
