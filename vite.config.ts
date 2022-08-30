@@ -15,6 +15,7 @@ export default ({ command }: ConfigEnv): UserConfigExport => {
     ],
     server: {
       port: 9501,
+      host: '127.0.0.1',
       open: true,
       proxy: {
         '/api': {

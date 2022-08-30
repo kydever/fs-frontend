@@ -21,6 +21,7 @@
     <el-row>
       <el-col :span="6">
         <el-tree
+          class="tree_div"
           :data="treeData"
           :props="defaultProps"
           node-key="title"
@@ -208,6 +209,7 @@ const deleteAjaxFun = async(parems:number[]) => {
     console.log(error)
   } finally {
     tableLoading.value = false
+    loading.value.close()
   }
 }
 
@@ -319,6 +321,11 @@ getTressData()
 
 .isfolder{
   cursor: pointer;
+}
+
+.tree_div{
+  height: 85vh;
+  overflow-y: auto;
 }
 
 </style>
