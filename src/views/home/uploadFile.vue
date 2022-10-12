@@ -107,7 +107,7 @@ let formData = new FormData()
 
 let i = 0
 
-const multiple = ref<number>(0)
+const multiple = ref<number>(1)
 
 // 回显
 const echoFun = (parems) =>{
